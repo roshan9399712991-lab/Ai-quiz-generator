@@ -1,0 +1,492 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Quiz Generator</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    min-height: 100vh;
+    padding: 25px;
+}
+
+.container {
+    max-width: 750px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #6045bd;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin: 15px 0 8px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+button {
+    border: none;
+    padding: 13px 20px;
+    border-radius: 8px;
+    background: #6652cc;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 18px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #4934a5;
+}
+
+.generate-btn {
+    width: 100%;
+}
+
+.option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #f1f1f8;
+    color: #333;
+    border: 2px solid transparent;
+    margin-top: 10px;
+}
+
+.option:hover {
+    background: #e4e0ff;
+}
+
+.option.selected {
+    border-color: #6652cc;
+    background: #e4e0ff;
+}
+
+.option:disabled {
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+.correct {
+    background: #d4edda !important;
+    border-color: #28a745 !important;
+}
+
+.wrong {
+    background: #f8d7da !important;
+    border-color: #dc3545 !important;
+}
+
+#quizSection, #resultSection {
+    display: none;
+    margin-top: 25px;
+}
+
+.progress {
+    height: 9px;
+    background: #eee;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #6652cc;
+    border-radius: 10px;
+}
+
+#feedback {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+#resultSection {
+    text-align: center;
+}
+
+.score {
+    font-size: 45px;
+    color: #6652cc;
+    margin: 20px;
+}
+
+@media(max-width: 600px) {
+    .container {
+        padding: 20px;
+        margin: 10px auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🤖 AI Quiz Generator</h1>
+    <p class="subtitle">
+        Generate your own quiz and test your knowledge!
+    </p>
+
+    <div id="setupSection">
+
+        <label>Enter Quiz Topic</label>
+        <input
+            type="text"
+            id="topic"
+            placeholder="Example: Computer Science"
+        >
+
+        <label>Select Difficulty</label>
+        <select id="difficulty">
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+        </select>
+
+        <label>Number of Questions</label>
+        <select id="questionCount">
+            <option value="5">5 Questions</option>
+            <option value="10">10 Questions</option>
+            <option value="15">15 Questions</option>
+        </select>
+
+        <button class="generate-btn" onclick="generateQuiz()">
+            Generate AI Quiz 🚀
+        </button>
+
+        <p id="loading" style="text-align:center;margin-top:15px;"></p>
+    </div>
+
+    <div id="quizSection">
+
+        <h2 id="quizTopic"></h2>
+
+        <p id="questionNumber"></p>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <h3 id="question" style="margin:20px 0;"></h3>
+
+        <div id="options"></div>
+
+        <p id="feedback"></p>
+
+        <button id="nextBtn" onclick="nextQuestion()" disabled>
+            Next Question →
+        </button>
+
+    </div>
+
+    <div id="resultSection">
+
+        <h2>🎉 Quiz Completed!</h2>
+
+        <div class="score" id="score"></div>
+
+        <h3 id="resultMessage"></h3>
+
+        <button onclick="location.reload()">
+            Generate Another Quiz
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+// Demo question database
+const quizDatabase = {
+
+    science: [
+        {
+            question: "Which planet is known as the Red Planet?",
+            options: ["Earth", "Mars", "Jupiter", "Venus"],
+            answer: "Mars"
+        },
+        {
+            question: "What is the chemical symbol of Water?",
+            options: ["CO2", "O2", "H2O", "NaCl"],
+            answer: "H2O"
+        },
+        {
+            question: "Which gas do plants absorb?",
+            options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
+            answer: "Carbon Dioxide"
+        }
+    ],
+
+    computer: [
+        {
+            question: "What does CPU stand for?",
+            options: [
+                "Central Processing Unit",
+                "Computer Personal Unit",
+                "Central Program Utility",
+                "Control Processing User"
+            ],
+            answer: "Central Processing Unit"
+        },
+        {
+            question: "Which language is used for web styling?",
+            options: ["HTML", "CSS", "Python", "C++"],
+            answer: "CSS"
+        },
+        {
+            question: "What does HTML stand for?",
+            options: [
+                "Hyper Text Markup Language",
+                "High Text Machine Language",
+                "Hyper Transfer Main Language",
+                "Home Tool Markup Language"
+            ],
+            answer: "Hyper Text Markup Language"
+        }
+    ],
+
+    history: [
+        {
+            question: "Who was the first Prime Minister of India?",
+            options: [
+                "Mahatma Gandhi",
+                "Jawaharlal Nehru",
+                "Sardar Patel",
+                "Dr. Rajendra Prasad"
+            ],
+            answer: "Jawaharlal Nehru"
+        },
+        {
+            question: "In which year did India gain independence?",
+            options: ["1945", "1946", "1947", "1950"],
+            answer: "1947"
+        }
+    ]
+
+};
+
+let questions = [];
+let currentQuestion = 0;
+let score = 0;
+let answered = false;
+
+
+// Generate Quiz
+function generateQuiz() {
+
+    const topic = document
+        .getElementById("topic").value
+        .trim().toLowerCase();
+
+    const count = Number(
+        document.getElementById("questionCount").value
+    );
+
+    if (!topic) {
+        alert("Please enter a quiz topic!");
+        return;
+    }
+
+    document.getElementById("loading").innerText =
+        "Generating quiz...";
+
+    setTimeout(() => {
+
+        let category = topic.includes("science")
+            ? "science"
+            : topic.includes("computer") ||
+              topic.includes("programming")
+            ? "computer"
+            : topic.includes("history")
+            ? "history"
+            : null;
+
+        if (!category) {
+            document.getElementById("loading").innerText =
+                "Demo mode supports Science, Computer and History. Try one of these topics.";
+            return;
+        }
+
+        const database = quizDatabase[category];
+
+        questions = Array.from(
+            { length: count },
+            (_, i) => ({
+                ...database[i % database.length]
+            })
+        );
+
+        currentQuestion = 0;
+        score = 0;
+
+        document.getElementById("loading").innerText = "";
+        document.getElementById("setupSection").style.display = "none";
+        document.getElementById("quizSection").style.display = "block";
+        document.getElementById("quizTopic").innerText =
+            topic.toUpperCase() + " QUIZ";
+
+        showQuestion();
+
+    }, 700);
+}
+
+
+// Display Question
+function showQuestion() {
+
+    answered = false;
+
+    const q = questions[currentQuestion];
+
+    document.getElementById("questionNumber").innerText =
+        `Question ${currentQuestion + 1} of ${questions.length}`;
+
+    document.getElementById("progressBar").style.width =
+        ((currentQuestion + 1) / questions.length * 100) + "%";
+
+    document.getElementById("question").innerText = q.question;
+
+    document.getElementById("feedback").innerText = "";
+
+    document.getElementById("nextBtn").disabled = true;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    q.options.forEach(option => {
+
+        const btn = document.createElement("button");
+
+        btn.className = "option";
+        btn.innerText = option;
+
+        btn.onclick = () => checkAnswer(btn, option);
+
+        optionsDiv.appendChild(btn);
+
+    });
+
+}
+
+
+// Check Answer
+function checkAnswer(button, selected) {
+
+    if (answered) return;
+
+    answered = true;
+
+    const correct = questions[currentQuestion].answer;
+
+    const buttons = document.querySelectorAll(".option");
+
+    buttons.forEach(btn => {
+
+        btn.disabled = true;
+
+        if (btn.innerText === correct) {
+            btn.classList.add("correct");
+        }
+
+    });
+
+    if (selected === correct) {
+
+        score++;
+
+        document.getElementById("feedback").innerText =
+            "✅ Correct Answer!";
+
+    } else {
+
+        button.classList.add("wrong");
+
+        document.getElementById("feedback").innerText =
+            "❌ Wrong Answer! Correct: " + correct;
+
+    }
+
+    document.getElementById("nextBtn").disabled = false;
+
+}
+
+
+// Next Question
+function nextQuestion() {
+
+    currentQuestion++;
+
+    if (currentQuestion < questions.length) {
+
+        showQuestion();
+
+    } else {
+
+        showResult();
+
+    }
+
+}
+
+
+// Show Final Result
+function showResult() {
+
+    document.getElementById("quizSection").style.display = "none";
+
+    document.getElementById("resultSection").style.display = "block";
+
+    document.getElementById("score").innerText =
+        score + " / " + questions.length;
+
+    let percentage = (score / questions.length) * 100;
+
+    let message = percentage >= 80
+        ? "Excellent! Amazing Performance 🏆"
+        : percentage >= 50
+        ? "Good Job! Keep Practicing 👍"
+        : "Keep Learning! You Can Do Better 💪";
+
+    document.getElementById("resultMessage").innerText = message;
+
+}
+
+</script>
+
+</body>
+</html>
