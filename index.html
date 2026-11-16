@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Quiz Generator | Groq</title>
+<title>AI Quiz Generator - Groq API</title>
 
 <style>
 * {
@@ -17,14 +17,14 @@
 body {
     min-height: 100vh;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg,#667eea,#764ba2);
 }
 
 .container {
     max-width: 750px;
     margin: 30px auto;
-    background: white;
     padding: 30px;
+    background: white;
     border-radius: 18px;
     box-shadow: 0 10px 35px #0003;
 }
@@ -43,8 +43,8 @@ h1 {
 
 label {
     display: block;
-    margin: 15px 0 8px;
     font-weight: bold;
+    margin: 15px 0 8px;
 }
 
 input, select {
@@ -53,16 +53,15 @@ input, select {
     border: 1px solid #ccc;
     border-radius: 8px;
     font-size: 15px;
-    outline-color: #6652cc;
 }
 
 button {
-    border: none;
     padding: 13px 20px;
+    border: none;
     border-radius: 8px;
     background: #6652cc;
     color: white;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
     margin-top: 15px;
 }
@@ -95,9 +94,9 @@ button:disabled {
 
 .progress-bar {
     height: 100%;
-    width: 0%;
+    width: 0;
     background: #6652cc;
-    transition: width .3s;
+    transition: .3s;
 }
 
 .option {
@@ -108,10 +107,6 @@ button:disabled {
     color: #333;
     border: 2px solid transparent;
     margin-top: 10px;
-}
-
-.option:hover {
-    background: #e4e0ff;
 }
 
 .option.correct {
@@ -147,12 +142,6 @@ button:disabled {
     overflow-wrap: anywhere;
 }
 
-.api-note {
-    font-size: 12px;
-    color: #777;
-    margin-top: 8px;
-}
-
 @media(max-width:600px) {
     .container {
         padding: 20px;
@@ -166,104 +155,90 @@ button:disabled {
 
 <div class="container">
 
-    <h1>🤖 AI Quiz Generator</h1>
-    <p class="subtitle">
-        Generate unlimited topic-based quizzes using Groq AI
-    </p>
+<h1>🤖 AI Quiz Generator</h1>
+<p class="subtitle">Powered by Groq AI</p>
 
-    <div id="setupSection">
+<div id="setupSection">
 
-        <label>Groq API Key</label>
-        <input type="password" id="apiKey"
-               placeholder="Enter your Groq API key">
+<label>Groq API Key</label>
+<input type="password" id="apiKey" placeholder="Enter Groq API Key">
 
-        <p class="api-note">
-            Get your key from console.groq.com/keys
-        </p>
+<label>AI Model</label>
+<select id="model">
+<option value="openai/gpt-oss-20b">OpenAI GPT-OSS 20B</option>
+<option value="openai/gpt-oss-120b">OpenAI GPT-OSS 120B</option>
+</select>
 
-        <label>Enter Quiz Topic</label>
-        <input type="text" id="topic"
-               placeholder="Example: Python Programming">
+<label>Enter Quiz Topic</label>
+<input type="text" id="topic" placeholder="Example: Python Programming">
 
-        <label>Select Difficulty</label>
-        <select id="difficulty">
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-        </select>
+<label>Select Difficulty</label>
+<select id="difficulty">
+<option>Easy</option>
+<option>Medium</option>
+<option>Hard</option>
+</select>
 
-        <label>Number of Questions</label>
-        <select id="questionCount">
-            <option value="5">5 Questions</option>
-            <option value="10">10 Questions</option>
-            <option value="15">15 Questions</option>
-        </select>
+<label>Number of Questions</label>
+<select id="questionCount">
+<option value="5">5 Questions</option>
+<option value="10">10 Questions</option>
+<option value="15">15 Questions</option>
+</select>
 
-        <button class="generate-btn" id="generateBtn"
-                onclick="generateQuiz()">
-            Generate AI Quiz 🚀
-        </button>
+<button class="generate-btn" id="generateBtn" onclick="generateQuiz()">
+Generate AI Quiz 🚀
+</button>
 
-        <p class="status" id="loading"></p>
+<p class="status" id="loading"></p>
 
-    </div>
+</div>
 
-    <div id="quizSection">
+<div id="quizSection">
 
-        <h2 id="quizTopic"></h2>
+<h2 id="quizTopic"></h2>
+<p id="questionNumber"></p>
 
-        <p id="questionNumber"></p>
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
 
-        <div class="progress">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
+<h3 id="question" style="margin:20px 0"></h3>
 
-        <h3 id="question" style="margin:20px 0;"></h3>
+<div id="options"></div>
+<p id="feedback"></p>
 
-        <div id="options"></div>
+<button id="nextBtn" onclick="nextQuestion()" disabled>
+Next Question →
+</button>
 
-        <p id="feedback"></p>
+</div>
 
-        <button id="nextBtn" onclick="nextQuestion()" disabled>
-            Next Question →
-        </button>
+<div id="resultSection">
 
-    </div>
+<h2>🎉 Quiz Completed!</h2>
+<div class="score" id="score"></div>
+<h3 id="resultMessage"></h3>
 
-    <div id="resultSection">
+<button onclick="location.reload()">Generate Another Quiz</button>
 
-        <h2>🎉 Quiz Completed!</h2>
-
-        <div class="score" id="score"></div>
-
-        <h3 id="resultMessage"></h3>
-
-        <button onclick="location.reload()">
-            Generate Another Quiz
-        </button>
-
-    </div>
-
+</div>
 </div>
 
 <script>
 
-const API_URL =
-"https://api.groq.com/openai/v1/chat/completions";
-
-const MODEL = "llama-3.3-70b-versatile";
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 let questions = [];
 let currentQuestion = 0;
 let score = 0;
 let answered = false;
 
-
-// Generate AI Quiz
 async function generateQuiz() {
 
     const apiKey = document.getElementById("apiKey").value.trim();
     const topic = document.getElementById("topic").value.trim();
+    const model = document.getElementById("model").value;
     const difficulty = document.getElementById("difficulty").value;
     const count = Number(document.getElementById("questionCount").value);
 
@@ -271,77 +246,65 @@ async function generateQuiz() {
     const generateBtn = document.getElementById("generateBtn");
 
     if (!apiKey) {
-        alert("Please enter your Groq API Key!");
+        alert("Enter your Groq API Key!");
         return;
     }
 
     if (!topic) {
-        alert("Please enter a quiz topic!");
+        alert("Enter a quiz topic!");
         return;
     }
 
     generateBtn.disabled = true;
-    loading.innerText = "🤖 Groq AI is generating your quiz...";
+    loading.innerText = "🤖 Generating quiz using Groq AI...";
 
     try {
 
         const prompt = `
-Create exactly ${count} multiple-choice quiz questions.
+Generate exactly ${count} multiple choice questions.
 
 Topic: ${topic}
 Difficulty: ${difficulty}
 
 Requirements:
-1. Questions must be relevant to the topic.
-2. Each question must have exactly 4 options.
-3. Only one option must be correct.
-4. Avoid duplicate questions.
-5. Make questions factually accurate.
-6. Return ONLY valid JSON without markdown.
+- Four options per question.
+- One correct answer.
+- No duplicate questions.
+- Factually accurate questions.
+- Answer must exactly match one option.
+- Return ONLY valid JSON.
 
-Use this exact JSON structure:
-
+Format:
 {
   "questions": [
     {
-      "question": "Question text",
-      "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
-      ],
-      "answer": "Correct option exactly as written"
+      "question": "Question?",
+      "options": ["A", "B", "C", "D"],
+      "answer": "A"
     }
   ]
 }
-
-Generate exactly ${count} questions.
 `;
 
         const response = await fetch(API_URL, {
             method: "POST",
-
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + apiKey
             },
-
             body: JSON.stringify({
-                model: MODEL,
-
+                model: model,
                 messages: [
                     {
                         role: "system",
-                        content: "You are an expert quiz generator. Return only valid JSON."
+                        content: "You are an expert quiz generator. Return valid JSON only."
                     },
                     {
                         role: "user",
                         content: prompt
                     }
                 ],
-
-                temperature: 0.7,
+                temperature: 0.5,
                 max_completion_tokens: 6000,
                 response_format: {
                     type: "json_object"
@@ -352,27 +315,20 @@ Generate exactly ${count} questions.
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(
-                data.error?.message || "Groq API request failed."
-            );
+            throw new Error(data.error?.message || "Groq API error");
         }
 
-        let content = data.choices?.[0]?.message?.content;
+        const content = data.choices?.[0]?.message?.content;
 
         if (!content) {
-            throw new Error("AI returned an empty response.");
+            throw new Error("Empty response from Groq");
         }
-
-        content = content
-            .replace(/```json/gi, "")
-            .replace(/```/g, "")
-            .trim();
 
         const result = JSON.parse(content);
 
         if (!Array.isArray(result.questions) ||
             result.questions.length !== count) {
-            throw new Error("AI returned an incorrect number of questions. Please try again.");
+            throw new Error("Invalid number of questions generated. Try again.");
         }
 
         questions = result.questions.map(q => {
@@ -384,7 +340,7 @@ Generate exactly ${count} questions.
                 typeof q.answer !== "string" ||
                 !q.options.includes(q.answer)
             ) {
-                throw new Error("Invalid question format received from AI.");
+                throw new Error("Invalid question format from AI");
             }
 
             return q;
@@ -403,21 +359,16 @@ Generate exactly ${count} questions.
 
         showQuestion();
 
-    } catch (error) {
+    } catch(error) {
 
         loading.innerText = "❌ " + error.message;
-
         console.error(error);
 
     } finally {
-
         generateBtn.disabled = false;
-
     }
 }
 
-
-// Display Question
 function showQuestion() {
 
     answered = false;
@@ -431,13 +382,10 @@ function showQuestion() {
         ((currentQuestion + 1) / questions.length * 100) + "%";
 
     document.getElementById("question").innerText = q.question;
-
     document.getElementById("feedback").innerText = "";
-
     document.getElementById("nextBtn").disabled = true;
 
     const optionsDiv = document.getElementById("options");
-
     optionsDiv.innerHTML = "";
 
     q.options.forEach(option => {
@@ -446,17 +394,13 @@ function showQuestion() {
 
         btn.className = "option";
         btn.innerText = option;
-
         btn.onclick = () => checkAnswer(btn, option);
 
         optionsDiv.appendChild(btn);
 
     });
-
 }
 
-
-// Check Answer
 function checkAnswer(button, selected) {
 
     if (answered) return;
@@ -464,7 +408,6 @@ function checkAnswer(button, selected) {
     answered = true;
 
     const correct = questions[currentQuestion].answer;
-
     const buttons = document.querySelectorAll(".option");
 
     buttons.forEach(btn => {
@@ -489,58 +432,43 @@ function checkAnswer(button, selected) {
         button.classList.add("wrong");
 
         document.getElementById("feedback").innerText =
-            "❌ Wrong Answer! Correct: " + correct;
+            "❌ Wrong! Correct Answer: " + correct;
 
     }
 
     document.getElementById("nextBtn").disabled = false;
-
 }
 
-
-// Next Question
 function nextQuestion() {
 
     currentQuestion++;
 
     if (currentQuestion < questions.length) {
-
         showQuestion();
-
     } else {
-
         showResult();
-
     }
-
 }
 
-
-// Show Result
 function showResult() {
 
     document.getElementById("quizSection").style.display = "none";
-
     document.getElementById("resultSection").style.display = "block";
 
     document.getElementById("score").innerText =
         score + " / " + questions.length;
 
-    const percentage = (score / questions.length) * 100;
+    const percentage = score / questions.length * 100;
 
-    const message = percentage >= 80
+    document.getElementById("resultMessage").innerText =
+        percentage >= 80
         ? "Excellent! Amazing Performance 🏆"
         : percentage >= 50
         ? "Good Job! Keep Practicing 👍"
-        : "Keep Learning! You Can Do Better 💪";
-
-    document.getElementById("resultMessage").innerText = message;
-
+        : "Keep Learning! 💪";
 }
 
 </script>
 
 </body>
 </html>
-```
-
