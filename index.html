@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Quiz Generator</title>
+<title>AI Quiz Generator | Groq</title>
 
 <style>
 * {
@@ -15,9 +15,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, #667eea, #764ba2);
     min-height: 100vh;
-    padding: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
 }
 
 .container {
@@ -26,7 +26,7 @@ body {
     background: white;
     padding: 30px;
     border-radius: 18px;
-    box-shadow: 0 10px 35px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 35px #0003;
 }
 
 h1 {
@@ -52,7 +52,8 @@ input, select {
     padding: 13px;
     border: 1px solid #ccc;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
+    outline-color: #6652cc;
 }
 
 button {
@@ -63,16 +64,40 @@ button {
     color: white;
     font-size: 16px;
     cursor: pointer;
-    margin-top: 18px;
-    transition: 0.3s;
+    margin-top: 15px;
 }
 
 button:hover {
     background: #4934a5;
 }
 
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
 .generate-btn {
     width: 100%;
+}
+
+#quizSection, #resultSection {
+    display: none;
+    margin-top: 25px;
+}
+
+.progress {
+    height: 9px;
+    background: #eee;
+    border-radius: 10px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #6652cc;
+    transition: width .3s;
 }
 
 .option {
@@ -89,43 +114,14 @@ button:hover {
     background: #e4e0ff;
 }
 
-.option.selected {
-    border-color: #6652cc;
-    background: #e4e0ff;
+.option.correct {
+    background: #d4edda;
+    border-color: #28a745;
 }
 
-.option:disabled {
-    cursor: not-allowed;
-    opacity: 1;
-}
-
-.correct {
-    background: #d4edda !important;
-    border-color: #28a745 !important;
-}
-
-.wrong {
-    background: #f8d7da !important;
-    border-color: #dc3545 !important;
-}
-
-#quizSection, #resultSection {
-    display: none;
-    margin-top: 25px;
-}
-
-.progress {
-    height: 9px;
-    background: #eee;
-    border-radius: 10px;
-    margin: 15px 0;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: #6652cc;
-    border-radius: 10px;
+.option.wrong {
+    background: #f8d7da;
+    border-color: #dc3545;
 }
 
 #feedback {
@@ -143,7 +139,21 @@ button:hover {
     margin: 20px;
 }
 
-@media(max-width: 600px) {
+.status {
+    text-align: center;
+    margin-top: 15px;
+    color: #6045bd;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.api-note {
+    font-size: 12px;
+    color: #777;
+    margin-top: 8px;
+}
+
+@media(max-width:600px) {
     .container {
         padding: 20px;
         margin: 10px auto;
@@ -158,17 +168,22 @@ button:hover {
 
     <h1>🤖 AI Quiz Generator</h1>
     <p class="subtitle">
-        Generate your own quiz and test your knowledge!
+        Generate unlimited topic-based quizzes using Groq AI
     </p>
 
     <div id="setupSection">
 
+        <label>Groq API Key</label>
+        <input type="password" id="apiKey"
+               placeholder="Enter your Groq API key">
+
+        <p class="api-note">
+            Get your key from console.groq.com/keys
+        </p>
+
         <label>Enter Quiz Topic</label>
-        <input
-            type="text"
-            id="topic"
-            placeholder="Example: Computer Science"
-        >
+        <input type="text" id="topic"
+               placeholder="Example: Python Programming">
 
         <label>Select Difficulty</label>
         <select id="difficulty">
@@ -184,11 +199,13 @@ button:hover {
             <option value="15">15 Questions</option>
         </select>
 
-        <button class="generate-btn" onclick="generateQuiz()">
+        <button class="generate-btn" id="generateBtn"
+                onclick="generateQuiz()">
             Generate AI Quiz 🚀
         </button>
 
-        <p id="loading" style="text-align:center;margin-top:15px;"></p>
+        <p class="status" id="loading"></p>
+
     </div>
 
     <div id="quizSection">
@@ -231,74 +248,10 @@ button:hover {
 
 <script>
 
-// Demo question database
-const quizDatabase = {
+const API_URL =
+"https://api.groq.com/openai/v1/chat/completions";
 
-    science: [
-        {
-            question: "Which planet is known as the Red Planet?",
-            options: ["Earth", "Mars", "Jupiter", "Venus"],
-            answer: "Mars"
-        },
-        {
-            question: "What is the chemical symbol of Water?",
-            options: ["CO2", "O2", "H2O", "NaCl"],
-            answer: "H2O"
-        },
-        {
-            question: "Which gas do plants absorb?",
-            options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
-            answer: "Carbon Dioxide"
-        }
-    ],
-
-    computer: [
-        {
-            question: "What does CPU stand for?",
-            options: [
-                "Central Processing Unit",
-                "Computer Personal Unit",
-                "Central Program Utility",
-                "Control Processing User"
-            ],
-            answer: "Central Processing Unit"
-        },
-        {
-            question: "Which language is used for web styling?",
-            options: ["HTML", "CSS", "Python", "C++"],
-            answer: "CSS"
-        },
-        {
-            question: "What does HTML stand for?",
-            options: [
-                "Hyper Text Markup Language",
-                "High Text Machine Language",
-                "Hyper Transfer Main Language",
-                "Home Tool Markup Language"
-            ],
-            answer: "Hyper Text Markup Language"
-        }
-    ],
-
-    history: [
-        {
-            question: "Who was the first Prime Minister of India?",
-            options: [
-                "Mahatma Gandhi",
-                "Jawaharlal Nehru",
-                "Sardar Patel",
-                "Dr. Rajendra Prasad"
-            ],
-            answer: "Jawaharlal Nehru"
-        },
-        {
-            question: "In which year did India gain independence?",
-            options: ["1945", "1946", "1947", "1950"],
-            answer: "1947"
-        }
-    ]
-
-};
+const MODEL = "llama-3.3-70b-versatile";
 
 let questions = [];
 let currentQuestion = 0;
@@ -306,63 +259,161 @@ let score = 0;
 let answered = false;
 
 
-// Generate Quiz
-function generateQuiz() {
+// Generate AI Quiz
+async function generateQuiz() {
 
-    const topic = document
-        .getElementById("topic").value
-        .trim().toLowerCase();
+    const apiKey = document.getElementById("apiKey").value.trim();
+    const topic = document.getElementById("topic").value.trim();
+    const difficulty = document.getElementById("difficulty").value;
+    const count = Number(document.getElementById("questionCount").value);
 
-    const count = Number(
-        document.getElementById("questionCount").value
-    );
+    const loading = document.getElementById("loading");
+    const generateBtn = document.getElementById("generateBtn");
+
+    if (!apiKey) {
+        alert("Please enter your Groq API Key!");
+        return;
+    }
 
     if (!topic) {
         alert("Please enter a quiz topic!");
         return;
     }
 
-    document.getElementById("loading").innerText =
-        "Generating quiz...";
+    generateBtn.disabled = true;
+    loading.innerText = "🤖 Groq AI is generating your quiz...";
 
-    setTimeout(() => {
+    try {
 
-        let category = topic.includes("science")
-            ? "science"
-            : topic.includes("computer") ||
-              topic.includes("programming")
-            ? "computer"
-            : topic.includes("history")
-            ? "history"
-            : null;
+        const prompt = `
+Create exactly ${count} multiple-choice quiz questions.
 
-        if (!category) {
-            document.getElementById("loading").innerText =
-                "Demo mode supports Science, Computer and History. Try one of these topics.";
-            return;
+Topic: ${topic}
+Difficulty: ${difficulty}
+
+Requirements:
+1. Questions must be relevant to the topic.
+2. Each question must have exactly 4 options.
+3. Only one option must be correct.
+4. Avoid duplicate questions.
+5. Make questions factually accurate.
+6. Return ONLY valid JSON without markdown.
+
+Use this exact JSON structure:
+
+{
+  "questions": [
+    {
+      "question": "Question text",
+      "options": [
+        "Option A",
+        "Option B",
+        "Option C",
+        "Option D"
+      ],
+      "answer": "Correct option exactly as written"
+    }
+  ]
+}
+
+Generate exactly ${count} questions.
+`;
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + apiKey
+            },
+
+            body: JSON.stringify({
+                model: MODEL,
+
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an expert quiz generator. Return only valid JSON."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+
+                temperature: 0.7,
+                max_completion_tokens: 6000,
+                response_format: {
+                    type: "json_object"
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error?.message || "Groq API request failed."
+            );
         }
 
-        const database = quizDatabase[category];
+        let content = data.choices?.[0]?.message?.content;
 
-        questions = Array.from(
-            { length: count },
-            (_, i) => ({
-                ...database[i % database.length]
-            })
-        );
+        if (!content) {
+            throw new Error("AI returned an empty response.");
+        }
+
+        content = content
+            .replace(/```json/gi, "")
+            .replace(/```/g, "")
+            .trim();
+
+        const result = JSON.parse(content);
+
+        if (!Array.isArray(result.questions) ||
+            result.questions.length !== count) {
+            throw new Error("AI returned an incorrect number of questions. Please try again.");
+        }
+
+        questions = result.questions.map(q => {
+
+            if (
+                typeof q.question !== "string" ||
+                !Array.isArray(q.options) ||
+                q.options.length !== 4 ||
+                typeof q.answer !== "string" ||
+                !q.options.includes(q.answer)
+            ) {
+                throw new Error("Invalid question format received from AI.");
+            }
+
+            return q;
+        });
 
         currentQuestion = 0;
         score = 0;
 
-        document.getElementById("loading").innerText = "";
         document.getElementById("setupSection").style.display = "none";
         document.getElementById("quizSection").style.display = "block";
+
         document.getElementById("quizTopic").innerText =
             topic.toUpperCase() + " QUIZ";
 
+        loading.innerText = "";
+
         showQuestion();
 
-    }, 700);
+    } catch (error) {
+
+        loading.innerText = "❌ " + error.message;
+
+        console.error(error);
+
+    } finally {
+
+        generateBtn.disabled = false;
+
+    }
 }
 
 
@@ -386,6 +437,7 @@ function showQuestion() {
     document.getElementById("nextBtn").disabled = true;
 
     const optionsDiv = document.getElementById("options");
+
     optionsDiv.innerHTML = "";
 
     q.options.forEach(option => {
@@ -464,7 +516,7 @@ function nextQuestion() {
 }
 
 
-// Show Final Result
+// Show Result
 function showResult() {
 
     document.getElementById("quizSection").style.display = "none";
@@ -474,9 +526,9 @@ function showResult() {
     document.getElementById("score").innerText =
         score + " / " + questions.length;
 
-    let percentage = (score / questions.length) * 100;
+    const percentage = (score / questions.length) * 100;
 
-    let message = percentage >= 80
+    const message = percentage >= 80
         ? "Excellent! Amazing Performance 🏆"
         : percentage >= 50
         ? "Good Job! Keep Practicing 👍"
@@ -490,3 +542,5 @@ function showResult() {
 
 </body>
 </html>
+```
+
